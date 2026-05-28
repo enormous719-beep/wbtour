@@ -195,7 +195,7 @@ onMounted(fetchBlogs)
 
 async function fetchBlogs() {
   loading.value = true
-  const res = await fetch('/api/admin/blogs', { headers: admin.authHeaders() })
+  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/blogs`, { headers: admin.authHeaders() })
   blogs.value = await res.json()
   loading.value = false
 }
@@ -240,7 +240,7 @@ async function saveBlog() {
     if (imageMode.value === 'upload' && selectedFile.value) {
       const fd = new FormData()
       fd.append('image', selectedFile.value)
-      const upRes = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${admin.token}` }, body: fd })
+      const upRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${admin.token}` }, body: fd })
       if (!upRes.ok) throw new Error('Gagal upload foto')
       thumbnailUrl = (await upRes.json()).url
     } else if (imageMode.value === 'upload' && previewUrl.value?.startsWith('/uploads/')) {
@@ -248,7 +248,7 @@ async function saveBlog() {
     }
 
     const payload = { ...form.value, thumbnail: thumbnailUrl }
-    const url = editingBlog.value ? `/api/admin/blogs/${editingBlog.value.slug}` : '/api/admin/blogs'
+    const url = editingBlog.value ? `${import.meta.env.VITE_API_URL || ''}/api/admin/blogs/${editingBlog.value.slug}` : `${import.meta.env.VITE_API_URL || ''}/api/admin/blogs`
     const method = editingBlog.value ? 'PUT' : 'POST'
     const res = await fetch(url, { method, headers: admin.authHeaders(), body: JSON.stringify(payload) })
     if (!res.ok) throw new Error((await res.json()).error || 'Gagal menyimpan')
@@ -262,7 +262,7 @@ async function saveBlog() {
 }
 
 async function togglePublish(blog) {
-  await fetch(`/api/admin/blogs/${blog.slug}`, {
+  await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/blogs/${blog.slug}`, {
     method: 'PUT', headers: admin.authHeaders(),
     body: JSON.stringify({ published: !blog.published }),
   })
@@ -271,7 +271,7 @@ async function togglePublish(blog) {
 
 async function deleteBlog(blog) {
   if (!confirm(`Hapus artikel "${blog.title}"?`)) return
-  await fetch(`/api/admin/blogs/${blog.slug}`, { method: 'DELETE', headers: admin.authHeaders() })
+  await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/blogs/${blog.slug}`, { method: 'DELETE', headers: admin.authHeaders() })
   await fetchBlogs()
 }
 

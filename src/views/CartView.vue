@@ -205,7 +205,7 @@ async function toggleItinerary(item) {
   itineraryLoading.value = true
 
   try {
-    const res = await fetch(`/api/packages/${item.slug}`)
+    const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/packages/${item.slug}`)
     if (res.ok) {
       const pkg = await res.json()
       itineraryData.value = pkg.itinerary || []

@@ -30,7 +30,7 @@ Mohon informasi ketersediaan dan jadwal. Terima kasih!`
 export async function orderViaWhatsApp({ items, customerName = '', customerPhone = '', note = '' }) {
   // Simpan ke backend (fire and forget — tidak block user)
   try {
-    await fetch('/api/orders', {
+    await fetch(`${import.meta.env.VITE_API_URL || ''}/api/orders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ customerName, customerPhone, items, note }),

@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { apiUrl } from '../utils/api.js'
 
 /**
  * Fetch semua paket, opsional dengan query pencarian
@@ -12,7 +13,7 @@ export function usePackages() {
         loading.value = true
         error.value = null
         try {
-            const url = q ? `/api/packages?q=${encodeURIComponent(q)}` : '/api/packages'
+            const url = q ? apiUrl(`/api/packages?q=${encodeURIComponent(q)}`) : apiUrl('/api/packages')
             const res = await fetch(url)
             if (!res.ok) throw new Error('Gagal mengambil data paket')
             packages.value = await res.json()
@@ -39,7 +40,7 @@ export function usePackageDetail() {
         error.value = null
         pkg.value = null
         try {
-            const res = await fetch(`/api/packages/${slug}`)
+            const res = await fetch(apiUrl(`/api/packages/${slug}`))
             if (res.status === 404) throw new Error('not_found')
             if (!res.ok) throw new Error('Gagal mengambil detail paket')
             pkg.value = await res.json()

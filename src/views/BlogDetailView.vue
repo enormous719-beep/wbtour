@@ -88,7 +88,7 @@ const blog = ref(null)
 const loading = ref(true)
 
 onMounted(async () => {
-  const res = await fetch(`/api/blogs/${route.params.slug}`)
+  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/blogs/${route.params.slug}`)
   if (res.ok) blog.value = await res.json()
   loading.value = false
 })

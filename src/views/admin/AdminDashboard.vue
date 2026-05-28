@@ -89,8 +89,8 @@ const loadingOrders = ref(true)
 onMounted(async () => {
   const headers = admin.authHeaders()
   const [sRes, oRes] = await Promise.all([
-    fetch('/api/admin/stats', { headers }),
-    fetch('/api/orders', { headers }),
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/stats`, { headers }),
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/orders`, { headers }),
   ])
   stats.value = await sRes.json()
   recentOrders.value = (await oRes.json()).slice(0, 5)

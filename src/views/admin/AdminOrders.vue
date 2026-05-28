@@ -132,13 +132,13 @@ onMounted(fetchOrders)
 
 async function fetchOrders() {
   loading.value = true
-  const res = await fetch('/api/orders', { headers: admin.authHeaders() })
+  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/orders`, { headers: admin.authHeaders() })
   orders.value = await res.json()
   loading.value = false
 }
 
 async function updateStatus(order, status) {
-  const res = await fetch(`/api/orders/${order.id}/status`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/orders/${order.id}/status`, {
     method: 'PATCH', headers: admin.authHeaders(), body: JSON.stringify({ status }),
   })
   const updated = await res.json()
@@ -148,7 +148,7 @@ async function updateStatus(order, status) {
 
 async function deleteOrder(order) {
   if (!confirm(`Hapus pesanan #${order.id}?`)) return
-  await fetch(`/api/orders/${order.id}`, { method: 'DELETE', headers: admin.authHeaders() })
+  await fetch(`${import.meta.env.VITE_API_URL || ''}/api/orders/${order.id}`, { method: 'DELETE', headers: admin.authHeaders() })
   orders.value = orders.value.filter(o => o.id !== order.id)
 }
 

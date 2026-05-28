@@ -329,7 +329,7 @@ const latestBlogs = ref([])
 const blogsLoading = ref(true)
 onMounted(async () => {
   try {
-    const res = await fetch('/api/blogs')
+    const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/blogs`)
     const data = await res.json()
     latestBlogs.value = data.slice(0, 3)
   } catch { /* silent */ } finally {

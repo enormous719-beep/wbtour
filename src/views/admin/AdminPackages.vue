@@ -246,7 +246,7 @@ onMounted(fetchPackages)
 
 async function fetchPackages() {
   loading.value = true
-  const res = await fetch('/api/packages')
+  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/packages`)
   packages.value = await res.json()
   loading.value = false
 }
@@ -310,7 +310,7 @@ async function savePackage() {
     if (imageMode.value === 'upload' && selectedFile.value) {
       const fd = new FormData()
       fd.append('image', selectedFile.value)
-      const upRes = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${admin.token}` }, body: fd })
+      const upRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${admin.token}` }, body: fd })
       if (!upRes.ok) throw new Error('Gagal upload foto')
       thumbnailUrl = (await upRes.json()).url
     } else if (imageMode.value === 'upload' && previewUrl.value?.startsWith('/uploads/')) {
@@ -326,7 +326,7 @@ async function savePackage() {
       itinerary: form.value.itinerary.map(d => d.filter(a => a.trim())).filter(d => d.length),
       priceOptions: form.value.priceOptions.filter(o => o.name && o.price).map(o => ({ name: o.name, price: Number(o.price) })),
     }
-    const url = editingPkg.value ? `/api/packages/${editingPkg.value.slug}` : '/api/packages'
+    const url = editingPkg.value ? `${import.meta.env.VITE_API_URL || ''}/api/packages/${editingPkg.value.slug}` : `${import.meta.env.VITE_API_URL || ''}/api/packages`
     const method = editingPkg.value ? 'PUT' : 'POST'
     const res = await fetch(url, { method, headers: admin.authHeaders(), body: JSON.stringify(payload) })
     if (!res.ok) throw new Error((await res.json()).error || 'Gagal menyimpan')
@@ -341,7 +341,7 @@ async function savePackage() {
 
 async function deletePackage(pkg) {
   if (!confirm(`Hapus paket "${pkg.title}"?`)) return
-  await fetch(`/api/packages/${pkg.slug}`, { method: 'DELETE', headers: admin.authHeaders() })
+  await fetch(`${import.meta.env.VITE_API_URL || ''}/api/packages/${pkg.slug}`, { method: 'DELETE', headers: admin.authHeaders() })
   await fetchPackages()
 }
 </script>
