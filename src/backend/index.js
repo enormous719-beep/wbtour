@@ -1,20 +1,27 @@
 const express = require('express')
 const cors = require('cors')
-const path = require('path')
-const fs = require('fs')
 const multer = require('multer')
 const cloudinary = require('cloudinary').v2
+const mongoose = require('mongoose')
+
 const app = express()
 const PORT = process.env.PORT || 3000
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://ferdinandwahyudha800_db_user:aY9BJSFvXBiobNJJ@cluster0.zrpdqwy.mongodb.net/wbtour?appName=Cluster0'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'wbtour2024'
+const ADMIN_TOKEN = 'wbtour-admin-secret-token'
 
-// Cloudinary config
+// =====================
+// CLOUDINARY
+// =====================
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dvxtbolx4',
   api_key: process.env.CLOUDINARY_API_KEY || '362566112468257',
   api_secret: process.env.CLOUDINARY_API_SECRET || 'VNMRpC2NLqapim9uxYATOFA8JwQ',
 })
 
-// CORS — izinkan semua origin (frontend Vercel, domain custom, localhost)
+// =====================
+// CORS
+// =====================
 app.use(cors({
   origin: [
     'https://wahyubandungtour.com',
@@ -26,113 +33,56 @@ app.use(cors({
   ],
   credentials: true,
 }))
-
 app.use(express.json())
 
 // =====================
-// JSON FILE STORAGE
-// Semua data disimpan ke db.json, persist saat restart
+// MONGOOSE MODELS
 // =====================
-const DB_PATH = path.join(__dirname, 'db.json')
+const packageSchema = new mongoose.Schema({
+  id: Number,
+  slug: { type: String, unique: true },
+  title: String,
+  city: String,
+  days: Number,
+  nights: Number,
+  price: Number,
+  thumbnail: String,
+  thumbnailLarge: String,
+  highlights: [String],
+  includes: [String],
+  excludes: [String],
+  itinerary: [[String]],
+  priceOptions: [{ name: String, price: Number }],
+}, { timestamps: true })
 
-const DEFAULT_DB = {
-  packages: [
-    {
-      id: 1,
-      slug: 'bali-3d2n-budget',
-      title: 'Bali 3D2N Budget',
-      city: 'Bali',
-      days: 3,
-      nights: 2,
-      price: 1850000,
-      thumbnail: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600&auto=format&fit=crop',
-      thumbnailLarge: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=2000&auto=format&fit=crop',
-      highlights: ['Tanah Lot', 'Tegalalang', 'Pantai Pandawa'],
-      includes: ['Hotel 2 malam', 'Sarapan', 'Mobil + driver', 'BBM', 'Tiket objek wisata'],
-      excludes: ['Tiket pesawat', 'Pengeluaran pribadi', 'Makan di luar itinerary'],
-      itinerary: [
-        ['Penjemputan di Bandara', 'Mengunjungi Tanah Lot', 'Check-in hotel & istirahat'],
-        ['Sarapan hotel', 'Mengunjungi Tegalalang Rice Terrace', 'Kopi Luwak tour', 'Kuta sunset'],
-        ['Pantai Pandawa', 'Belanja oleh-oleh', 'Transfer ke bandara'],
-      ],
-      priceOptions: [
-        { name: '2–3 Pax', price: 2050000 },
-        { name: '4–6 Pax', price: 1850000 },
-        { name: '7–10 Pax', price: 1650000 },
-      ],
-    },
-    {
-      id: 2,
-      slug: 'labuan-bajo-4d3n',
-      title: 'Labuan Bajo 4D3N Open Trip',
-      city: 'Labuan Bajo',
-      days: 4,
-      nights: 3,
-      price: 3950000,
-      thumbnail: 'https://images.unsplash.com/photo-1558981124-5c03e2b2739d?q=80&w=1600&auto=format&fit=crop',
-      thumbnailLarge: 'https://images.unsplash.com/photo-1558981124-5c03e2b2739d?q=80&w=2000&auto=format&fit=crop',
-      highlights: ['Pulau Padar', 'Pulau Komodo', 'Pink Beach'],
-      includes: ['Live on board', 'Makan 3x sehari', 'Guide', 'Dokumentasi'],
-      excludes: ['Tiket pesawat', 'Tip guide', 'Pengeluaran pribadi'],
-      itinerary: [
-        ['Check-in kapal', 'Snorkeling', 'Sunset di Pulau Kanawa'],
-        ['Hiking Pulau Padar', 'Pulau Komodo', 'Pink Beach'],
-        ['Manta Point', 'Taka Makassar', 'Snorkeling spot rahasia'],
-        ['Checkout kapal', 'Belanja oleh-oleh', 'Transfer bandara'],
-      ],
-      priceOptions: [
-        { name: 'Open Trip', price: 3950000 },
-        { name: 'Private Trip (min 4 pax)', price: 4750000 },
-      ],
-    },
-    {
-      id: 3,
-      slug: 'yogyakarta-2d1n',
-      title: 'Yogyakarta 2D1N Hemat',
-      city: 'Yogyakarta',
-      days: 2,
-      nights: 1,
-      price: 950000,
-      thumbnail: 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=1600&auto=format&fit=crop',
-      thumbnailLarge: 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=2000&auto=format&fit=crop',
-      highlights: ['Candi Prambanan', 'Malioboro', 'HeHa Sky View'],
-      includes: ['Hotel 1 malam', 'Transport lokal', 'Tiket wisata'],
-      excludes: ['Makan siang & malam', 'Pengeluaran pribadi'],
-      itinerary: [
-        ['Candi Prambanan', 'Malioboro', 'Check-in hotel'],
-        ['HeHa Sky View', 'Belanja oleh-oleh', 'Transfer pulang'],
-      ],
-      priceOptions: [
-        { name: '2–3 Pax', price: 1100000 },
-        { name: '4–6 Pax', price: 950000 },
-      ],
-    },
-  ],
-  orders: [],
-  orderIdCounter: 1,
-}
+const orderSchema = new mongoose.Schema({
+  customerName: String,
+  customerPhone: String,
+  items: mongoose.Schema.Types.Mixed,
+  note: String,
+  totalPrice: Number,
+  status: { type: String, default: 'pending' },
+  createdAt: { type: Date, default: Date.now },
+})
 
-// Baca db.json, buat baru kalau belum ada
-function readDB() {
-  if (!fs.existsSync(DB_PATH)) {
-    writeDB(DEFAULT_DB)
-    return DEFAULT_DB
-  }
-  try {
-    return JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'))
-  } catch {
-    writeDB(DEFAULT_DB)
-    return DEFAULT_DB
-  }
-}
+const blogSchema = new mongoose.Schema({
+  slug: { type: String, unique: true },
+  title: String,
+  excerpt: String,
+  content: String,
+  category: String,
+  thumbnail: String,
+  author: String,
+  published: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+})
 
-// Tulis ke db.json
-function writeDB(data) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8')
-}
+const Package = mongoose.model('Package', packageSchema)
+const Order = mongoose.model('Order', orderSchema)
+const Blog = mongoose.model('Blog', blogSchema)
 
 // =====================
-// UPLOAD SETUP — pakai memory storage, lalu upload ke Cloudinary
+// UPLOAD (Cloudinary)
 // =====================
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -146,9 +96,6 @@ const upload = multer({
 // =====================
 // AUTH
 // =====================
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'wbtour2024'
-const ADMIN_TOKEN = 'wbtour-admin-secret-token'
-
 function requireAuth(req, res, next) {
   if (req.headers['authorization'] !== `Bearer ${ADMIN_TOKEN}`) {
     return res.status(401).json({ error: 'Unauthorized' })
@@ -164,14 +111,14 @@ app.post('/api/admin/login', (req, res) => {
 })
 
 // =====================
-// HEALTH CHECK
+// HEALTH
 // =====================
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Backend wbtour jalan ✓' })
+  res.json({ status: 'ok', message: 'Backend wbtour jalan ✓', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' })
 })
 
 // =====================
-// UPLOAD GAMBAR — ke Cloudinary
+// UPLOAD
 // =====================
 app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Tidak ada file' })
@@ -185,218 +132,267 @@ app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) =>
     })
     res.json({ url: result.secure_url })
   } catch (err) {
-    res.status(500).json({ error: 'Gagal upload ke Cloudinary: ' + err.message })
+    res.status(500).json({ error: 'Gagal upload: ' + err.message })
   }
 })
 
 // =====================
 // PACKAGES — PUBLIC
 // =====================
-app.get('/api/packages', (req, res) => {
-  const { packages } = readDB()
-  const { q } = req.query
-  if (q) {
-    const kw = q.toLowerCase()
-    return res.json(packages.filter(p =>
-      p.title.toLowerCase().includes(kw) ||
-      p.city.toLowerCase().includes(kw) ||
-      (p.highlights || []).some(h => h.toLowerCase().includes(kw))
-    ))
+app.get('/api/packages', async (req, res) => {
+  try {
+    const { q } = req.query
+    let query = {}
+    if (q) {
+      const kw = new RegExp(q, 'i')
+      query = { $or: [{ title: kw }, { city: kw }, { highlights: kw }] }
+    }
+    const packages = await Package.find(query).sort({ id: 1 })
+    res.json(packages)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
-  res.json(packages)
 })
 
-app.get('/api/packages/:slug', (req, res) => {
-  const { packages } = readDB()
-  const pkg = packages.find(p => p.slug === req.params.slug)
-  if (!pkg) return res.status(404).json({ error: 'Paket tidak ditemukan' })
-  res.json(pkg)
+app.get('/api/packages/:slug', async (req, res) => {
+  try {
+    const pkg = await Package.findOne({ slug: req.params.slug })
+    if (!pkg) return res.status(404).json({ error: 'Paket tidak ditemukan' })
+    res.json(pkg)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // =====================
 // PACKAGES — ADMIN CRUD
 // =====================
-app.post('/api/packages', requireAuth, (req, res) => {
-  const db = readDB()
-  const data = req.body
-  if (!data.title || !data.city || !data.price) {
-    return res.status(400).json({ error: 'title, city, dan price wajib diisi' })
+app.post('/api/packages', requireAuth, async (req, res) => {
+  try {
+    const data = req.body
+    if (!data.title || !data.city || !data.price) {
+      return res.status(400).json({ error: 'title, city, dan price wajib diisi' })
+    }
+    const count = await Package.countDocuments()
+    const pkg = new Package({
+      id: count + 1,
+      slug: data.slug || data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      title: data.title, city: data.city,
+      days: data.days || 1, nights: data.nights || 0,
+      price: Number(data.price),
+      thumbnail: data.thumbnail || '',
+      thumbnailLarge: data.thumbnailLarge || data.thumbnail || '',
+      highlights: data.highlights || [],
+      includes: data.includes || [],
+      excludes: data.excludes || [],
+      itinerary: data.itinerary || [],
+      priceOptions: data.priceOptions || [],
+    })
+    await pkg.save()
+    res.status(201).json(pkg)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
-  const newPkg = {
-    id: db.packages.length ? Math.max(...db.packages.map(p => p.id)) + 1 : 1,
-    slug: data.slug || data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-    title: data.title,
-    city: data.city,
-    days: data.days || 1,
-    nights: data.nights || 0,
-    price: Number(data.price),
-    thumbnail: data.thumbnail || '',
-    thumbnailLarge: data.thumbnailLarge || data.thumbnail || '',
-    highlights: data.highlights || [],
-    includes: data.includes || [],
-    excludes: data.excludes || [],
-    itinerary: data.itinerary || [],
-    priceOptions: data.priceOptions || [],
-  }
-  db.packages.push(newPkg)
-  writeDB(db)
-  res.status(201).json(newPkg)
 })
 
-app.put('/api/packages/:slug', requireAuth, (req, res) => {
-  const db = readDB()
-  const idx = db.packages.findIndex(p => p.slug === req.params.slug)
-  if (idx === -1) return res.status(404).json({ error: 'Paket tidak ditemukan' })
-  db.packages[idx] = { ...db.packages[idx], ...req.body }
-  writeDB(db)
-  res.json(db.packages[idx])
+app.put('/api/packages/:slug', requireAuth, async (req, res) => {
+  try {
+    const pkg = await Package.findOneAndUpdate({ slug: req.params.slug }, req.body, { new: true })
+    if (!pkg) return res.status(404).json({ error: 'Paket tidak ditemukan' })
+    res.json(pkg)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
-app.delete('/api/packages/:slug', requireAuth, (req, res) => {
-  const db = readDB()
-  const idx = db.packages.findIndex(p => p.slug === req.params.slug)
-  if (idx === -1) return res.status(404).json({ error: 'Paket tidak ditemukan' })
-  const [deleted] = db.packages.splice(idx, 1)
-  writeDB(db)
-  res.json({ message: 'Paket dihapus', deleted })
+app.delete('/api/packages/:slug', requireAuth, async (req, res) => {
+  try {
+    const pkg = await Package.findOneAndDelete({ slug: req.params.slug })
+    if (!pkg) return res.status(404).json({ error: 'Paket tidak ditemukan' })
+    res.json({ message: 'Paket dihapus', deleted: pkg })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // =====================
 // ORDERS
 // =====================
-app.post('/api/orders', (req, res) => {
-  const db = readDB()
-  const { customerName, customerPhone, items, note } = req.body
-  if (!items || !items.length) return res.status(400).json({ error: 'Items kosong' })
-  const order = {
-    id: db.orderIdCounter++,
-    customerName: customerName || 'Tidak diisi',
-    customerPhone: customerPhone || 'Tidak diisi',
-    items,
-    note: note || '',
-    totalPrice: items.reduce((sum, i) => sum + (i.price * (i.quantity || 1)), 0),
-    status: 'pending',
-    createdAt: new Date().toISOString(),
+app.post('/api/orders', async (req, res) => {
+  try {
+    const { customerName, customerPhone, items, note } = req.body
+    if (!items || !items.length) return res.status(400).json({ error: 'Items kosong' })
+    const order = new Order({
+      customerName: customerName || 'Tidak diisi',
+      customerPhone: customerPhone || 'Tidak diisi',
+      items, note: note || '',
+      totalPrice: items.reduce((sum, i) => sum + (i.price * (i.quantity || 1)), 0),
+    })
+    await order.save()
+    res.status(201).json(order)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
-  db.orders.push(order)
-  writeDB(db)
-  res.status(201).json(order)
 })
 
-app.get('/api/orders', requireAuth, (req, res) => {
-  const { orders } = readDB()
-  res.json([...orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)))
-})
-
-app.patch('/api/orders/:id/status', requireAuth, (req, res) => {
-  const db = readDB()
-  const order = db.orders.find(o => o.id === Number(req.params.id))
-  if (!order) return res.status(404).json({ error: 'Pesanan tidak ditemukan' })
-  const { status } = req.body
-  if (!['pending', 'confirmed', 'cancelled'].includes(status)) {
-    return res.status(400).json({ error: 'Status tidak valid' })
+app.get('/api/orders', requireAuth, async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 })
+    res.json(orders)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
-  order.status = status
-  writeDB(db)
-  res.json(order)
 })
 
-app.delete('/api/orders/:id', requireAuth, (req, res) => {
-  const db = readDB()
-  const idx = db.orders.findIndex(o => o.id === Number(req.params.id))
-  if (idx === -1) return res.status(404).json({ error: 'Pesanan tidak ditemukan' })
-  db.orders.splice(idx, 1)
-  writeDB(db)
-  res.json({ message: 'Pesanan dihapus' })
+app.patch('/api/orders/:id/status', requireAuth, async (req, res) => {
+  try {
+    const { status } = req.body
+    if (!['pending', 'confirmed', 'cancelled'].includes(status)) {
+      return res.status(400).json({ error: 'Status tidak valid' })
+    }
+    const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true })
+    if (!order) return res.status(404).json({ error: 'Pesanan tidak ditemukan' })
+    res.json(order)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.delete('/api/orders/:id', requireAuth, async (req, res) => {
+  try {
+    const order = await Order.findByIdAndDelete(req.params.id)
+    if (!order) return res.status(404).json({ error: 'Pesanan tidak ditemukan' })
+    res.json({ message: 'Pesanan dihapus' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // =====================
 // BLOG — PUBLIC
 // =====================
-app.get('/api/blogs', (req, res) => {
-  const { blogs } = readDB()
-  const published = blogs
-    .filter(b => b.published)
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  res.json(published)
+app.get('/api/blogs', async (req, res) => {
+  try {
+    const blogs = await Blog.find({ published: true }).sort({ createdAt: -1 })
+    res.json(blogs)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
-app.get('/api/blogs/:slug', (req, res) => {
-  const { blogs } = readDB()
-  const blog = blogs.find(b => b.slug === req.params.slug && b.published)
-  if (!blog) return res.status(404).json({ error: 'Artikel tidak ditemukan' })
-  res.json(blog)
+app.get('/api/blogs/:slug', async (req, res) => {
+  try {
+    const blog = await Blog.findOne({ slug: req.params.slug, published: true })
+    if (!blog) return res.status(404).json({ error: 'Artikel tidak ditemukan' })
+    res.json(blog)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // =====================
 // BLOG — ADMIN CRUD
 // =====================
-app.get('/api/admin/blogs', requireAuth, (req, res) => {
-  const { blogs } = readDB()
-  res.json([...blogs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)))
-})
-
-app.post('/api/admin/blogs', requireAuth, (req, res) => {
-  const db = readDB()
-  const data = req.body
-  if (!data.title || !data.content) {
-    return res.status(400).json({ error: 'title dan content wajib diisi' })
+app.get('/api/admin/blogs', requireAuth, async (req, res) => {
+  try {
+    const blogs = await Blog.find().sort({ createdAt: -1 })
+    res.json(blogs)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
-  const newBlog = {
-    id: db.blogIdCounter++,
-    slug: data.slug || data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-    title: data.title,
-    excerpt: data.excerpt || '',
-    content: data.content,
-    category: data.category || 'Umum',
-    thumbnail: data.thumbnail || '',
-    author: data.author || 'Tim WBTour',
-    published: data.published ?? false,
-    createdAt: new Date().toISOString(),
+})
+
+app.post('/api/admin/blogs', requireAuth, async (req, res) => {
+  try {
+    const data = req.body
+    if (!data.title || !data.content) {
+      return res.status(400).json({ error: 'title dan content wajib diisi' })
+    }
+    const blog = new Blog({
+      slug: data.slug || data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      title: data.title, excerpt: data.excerpt || '',
+      content: data.content, category: data.category || 'Umum',
+      thumbnail: data.thumbnail || '', author: data.author || 'Tim WBTour',
+      published: data.published ?? false,
+    })
+    await blog.save()
+    res.status(201).json(blog)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
-  db.blogs.push(newBlog)
-  writeDB(db)
-  res.status(201).json(newBlog)
 })
 
-app.put('/api/admin/blogs/:slug', requireAuth, (req, res) => {
-  const db = readDB()
-  const idx = db.blogs.findIndex(b => b.slug === req.params.slug)
-  if (idx === -1) return res.status(404).json({ error: 'Artikel tidak ditemukan' })
-  db.blogs[idx] = { ...db.blogs[idx], ...req.body }
-  writeDB(db)
-  res.json(db.blogs[idx])
+app.put('/api/admin/blogs/:slug', requireAuth, async (req, res) => {
+  try {
+    const blog = await Blog.findOneAndUpdate({ slug: req.params.slug }, req.body, { new: true })
+    if (!blog) return res.status(404).json({ error: 'Artikel tidak ditemukan' })
+    res.json(blog)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
-app.delete('/api/admin/blogs/:slug', requireAuth, (req, res) => {
-  const db = readDB()
-  const idx = db.blogs.findIndex(b => b.slug === req.params.slug)
-  if (idx === -1) return res.status(404).json({ error: 'Artikel tidak ditemukan' })
-  const [deleted] = db.blogs.splice(idx, 1)
-  writeDB(db)
-  res.json({ message: 'Artikel dihapus', deleted })
+app.delete('/api/admin/blogs/:slug', requireAuth, async (req, res) => {
+  try {
+    const blog = await Blog.findOneAndDelete({ slug: req.params.slug })
+    if (!blog) return res.status(404).json({ error: 'Artikel tidak ditemukan' })
+    res.json({ message: 'Artikel dihapus', deleted: blog })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // =====================
 // STATS
 // =====================
-app.get('/api/admin/stats', requireAuth, (req, res) => {
-  const { packages, orders, blogs } = readDB()
-  res.json({
-    totalPackages: packages.length,
-    totalOrders: orders.length,
-    totalBlogs: (blogs || []).filter(b => b.published).length,
-    pendingOrders: orders.filter(o => o.status === 'pending').length,
-    confirmedOrders: orders.filter(o => o.status === 'confirmed').length,
-    totalRevenue: orders.filter(o => o.status === 'confirmed').reduce((s, o) => s + o.totalPrice, 0),
-  })
+app.get('/api/admin/stats', requireAuth, async (req, res) => {
+  try {
+    const [totalPackages, totalOrders, totalBlogs, pendingOrders, confirmedOrders] = await Promise.all([
+      Package.countDocuments(),
+      Order.countDocuments(),
+      Blog.countDocuments({ published: true }),
+      Order.countDocuments({ status: 'pending' }),
+      Order.countDocuments({ status: 'confirmed' }),
+    ])
+    const revenueResult = await Order.aggregate([
+      { $match: { status: 'confirmed' } },
+      { $group: { _id: null, total: { $sum: '$totalPrice' } } }
+    ])
+    res.json({
+      totalPackages, totalOrders, totalBlogs,
+      pendingOrders, confirmedOrders,
+      totalRevenue: revenueResult[0]?.total || 0,
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
+
+// =====================
+// SEED — isi data awal kalau DB kosong
+// =====================
+async function seedIfEmpty() {
+  const count = await Package.countDocuments()
+  if (count > 0) return
+  console.log('Seeding initial data...')
+  const { packages, blogs } = require('./db.json')
+  if (packages?.length) await Package.insertMany(packages)
+  if (blogs?.length) await Blog.insertMany(blogs.map(b => ({ ...b, _id: undefined, id: undefined })))
+  console.log('Seed selesai.')
+}
 
 // =====================
 // START
 // =====================
-app.listen(PORT, () => {
-  console.log(`✓ Backend wbtour berjalan di http://localhost:${PORT}`)
-  console.log(`  Data tersimpan di: ${DB_PATH}`)
-  console.log(`  Password admin   : ${ADMIN_PASSWORD}`)
-})
+mongoose.connect(MONGO_URI)
+  .then(async () => {
+    console.log('✓ MongoDB terhubung')
+    await seedIfEmpty()
+    app.listen(PORT, () => {
+      console.log(`✓ Backend wbtour berjalan di http://localhost:${PORT}`)
+    })
+  })
+  .catch(err => {
+    console.error('✗ MongoDB gagal:', err.message)
+    process.exit(1)
+  })
