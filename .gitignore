@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+
+# Data backend — jangan ikut commit, biar tiap environment punya data sendiri
+src/backend/db.json
+src/backend/uploads/
