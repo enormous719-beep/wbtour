@@ -1,9 +1,23 @@
 const express = require('express')
+const cors = require('cors')
 const path = require('path')
 const fs = require('fs')
 const multer = require('multer')
 const app = express()
-const PORT = 3000
+const PORT = process.env.PORT || 3000
+
+// CORS — izinkan semua origin (frontend Vercel, domain custom, localhost)
+app.use(cors({
+  origin: [
+    'https://wahyubandungtour.com',
+    'https://www.wahyubandungtour.com',
+    'https://wbtour.vercel.app',
+    'http://localhost:9000',
+    'http://localhost:9001',
+    'http://localhost:5173',
+  ],
+  credentials: true,
+}))
 
 app.use(express.json())
 
