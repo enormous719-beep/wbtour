@@ -3,8 +3,16 @@ const cors = require('cors')
 const path = require('path')
 const fs = require('fs')
 const multer = require('multer')
+const cloudinary = require('cloudinary').v2
 const app = express()
 const PORT = process.env.PORT || 3000
+
+// Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dvxtbolx4',
+  api_key: process.env.CLOUDINARY_API_KEY || '362566112468257',
+  api_secret: process.env.CLOUDINARY_API_SECRET || 'VNMRpC2NLqapim9uxYATOFA8JwQ',
+})
 
 // CORS — izinkan semua origin (frontend Vercel, domain custom, localhost)
 app.use(cors({
@@ -124,29 +132,16 @@ function writeDB(data) {
 }
 
 // =====================
-// UPLOAD SETUP
+// UPLOAD SETUP — pakai memory storage, lalu upload ke Cloudinary
 // =====================
-const uploadDir = path.join(__dirname, 'uploads')
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir)
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`)
-  }
-})
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) return cb(new Error('Hanya file gambar'))
     cb(null, true)
   }
 })
-
-app.use('/uploads', express.static(uploadDir))
 
 // =====================
 // AUTH
@@ -176,11 +171,22 @@ app.get('/api/health', (req, res) => {
 })
 
 // =====================
-// UPLOAD GAMBAR
+// UPLOAD GAMBAR — ke Cloudinary
 // =====================
-app.post('/api/upload', requireAuth, upload.single('image'), (req, res) => {
+app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Tidak ada file' })
-  res.json({ url: `/uploads/${req.file.filename}` })
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'wbtour', resource_type: 'image' },
+        (error, result) => error ? reject(error) : resolve(result)
+      )
+      stream.end(req.file.buffer)
+    })
+    res.json({ url: result.secure_url })
+  } catch (err) {
+    res.status(500).json({ error: 'Gagal upload ke Cloudinary: ' + err.message })
+  }
 })
 
 // =====================
