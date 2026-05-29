@@ -374,11 +374,25 @@ app.get('/api/admin/stats', requireAuth, async (req, res) => {
 async function seedIfEmpty() {
   const count = await Package.countDocuments()
   if (count > 0) return
+
   console.log('Seeding initial data...')
-  const { packages, blogs } = require('./db.json')
-  if (packages?.length) await Package.insertMany(packages)
-  if (blogs?.length) await Blog.insertMany(blogs.map(b => ({ ...b, _id: undefined, id: undefined })))
-  console.log('Seed selesai.')
+  try {
+    const dbPath = require('path').join(__dirname, 'db.json')
+    const fs = require('fs')
+    if (!fs.existsSync(dbPath)) {
+      console.log('db.json tidak ditemukan, skip seed.')
+      return
+    }
+    const { packages, blogs } = JSON.parse(fs.readFileSync(dbPath, 'utf-8'))
+    if (packages?.length) await Package.insertMany(packages)
+    if (blogs?.length) await Blog.insertMany(blogs.map(b => {
+      const { _id, id, ...rest } = b
+      return rest
+    }))
+    console.log('Seed selesai.')
+  } catch (e) {
+    console.log('Seed skip:', e.message)
+  }
 }
 
 // =====================
