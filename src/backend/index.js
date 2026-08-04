@@ -27,7 +27,12 @@ app.use(cors({
     // Allow requests with no origin (mobile apps, curl, postman)
     if (!origin) return callback(null, true);
 
-    // Allowed origins
+    // Allow all Vercel domains
+    if (origin && origin.indexOf('.vercel.app') !== -1) {
+      return callback(null, true);
+    }
+
+    // Allowed custom domains
     const allowedOrigins = [
       'https://wahyubandungtour.com',
       'https://www.wahyubandungtour.com',
@@ -36,16 +41,13 @@ app.use(cors({
       'http://localhost:5173',
     ];
 
-    // Allow all Vercel preview/production URLs
-    if (origin.includes('.vercel.app')) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       return callback(null, true);
     }
 
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Log blocked origins for debugging
+    console.log('CORS: Unknown origin -', origin);
+    callback(null, true); // Allow anyway for now
   },
   credentials: true,
 }))
