@@ -23,14 +23,30 @@ cloudinary.config({
 // CORS
 // =====================
 app.use(cors({
-  origin: [
-    'https://wahyubandungtour.com',
-    'https://www.wahyubandungtour.com',
-    'https://wbtour.vercel.app',
-    'http://localhost:9000',
-    'http://localhost:9001',
-    'http://localhost:5173',
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, postman)
+    if (!origin) return callback(null, true);
+
+    // Allowed origins
+    const allowedOrigins = [
+      'https://wahyubandungtour.com',
+      'https://www.wahyubandungtour.com',
+      'http://localhost:9000',
+      'http://localhost:9001',
+      'http://localhost:5173',
+    ];
+
+    // Allow all Vercel preview/production URLs
+    if (origin.includes('.vercel.app')) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }))
 app.use(express.json())
