@@ -416,15 +416,35 @@ async function seedIfEmpty() {
 // =====================
 // START
 // =====================
-mongoose.connect(MONGO_URI)
+console.log('🚀 Starting backend...')
+console.log('PORT:', PORT)
+console.log('MONGO_URI:', MONGO_URI ? 'Set ✓' : 'Not set ✗')
+
+// Set mongoose options
+mongoose.set('strictQuery', false)
+
+mongoose.connect(MONGO_URI, {
+  serverSelectionTimeoutMS: 10000, // 10 second timeout
+  socketTimeoutMS: 45000,
+})
   .then(async () => {
     console.log('✓ MongoDB terhubung')
     await seedIfEmpty()
-    app.listen(PORT, () => {
-      console.log(`✓ Backend wbtour berjalan di http://localhost:${PORT}`)
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✓ Backend wbtour berjalan di http://0.0.0.0:${PORT}`)
     })
   })
   .catch(err => {
     console.error('✗ MongoDB gagal:', err.message)
+    console.error('Full error:', err)
     process.exit(1)
   })
+
+// Handle mongoose connection events
+mongoose.connection.on('connecting', () => {
+  console.log('⏳ MongoDB connecting...')
+})
+
+mongoose.connection.on('disconnected', () => {
+  console.log('✗ MongoDB disconnected')
+})
