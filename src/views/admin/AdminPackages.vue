@@ -44,6 +44,9 @@
             <td class="px-6 py-4 text-emerald-400 font-semibold text-sm">{{ formatIDR(pkg.price) }}</td>
             <td class="px-6 py-4 text-right">
               <div class="flex items-center justify-end gap-1.5">
+                <button @click="exportPDF(pkg)" class="px-3 py-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/15 rounded-lg transition-colors" title="Export PDF Itinerary">
+                  📄 PDF
+                </button>
                 <button @click="openForm(pkg)" class="px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">Edit</button>
                 <button @click="deletePackage(pkg)" class="px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/15 rounded-lg transition-colors">Hapus</button>
               </div>
@@ -214,6 +217,7 @@
 import { ref, onMounted } from 'vue'
 import { useAdminStore } from '@/stores/admin'
 import { formatIDR } from '@/data/packages'
+import { generateItineraryPDF } from '@/utils/pdfGenerator'
 
 const admin = useAdminStore()
 const packages = ref([])
@@ -343,6 +347,15 @@ async function deletePackage(pkg) {
   if (!confirm(`Hapus paket "${pkg.title}"?`)) return
   await fetch(`${import.meta.env.VITE_API_URL || ''}/api/packages/${pkg.slug}`, { method: 'DELETE', headers: admin.authHeaders() })
   await fetchPackages()
+}
+
+function exportPDF(pkg) {
+  try {
+    generateItineraryPDF(pkg)
+  } catch (error) {
+    console.error('Error generating PDF:', error)
+    alert('Gagal membuat PDF: ' + error.message)
+  }
 }
 </script>
 
