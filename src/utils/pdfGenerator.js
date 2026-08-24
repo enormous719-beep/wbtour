@@ -51,10 +51,21 @@ export async function generateItineraryPDF(packageData) {
     // Add logo if loaded
     if (logo) {
         try {
-            // Logo size: width 30, height auto-calculated to maintain aspect ratio
-            const logoWidth = 30
+            // Logo size: width 25, height auto-calculated to maintain aspect ratio
+            const logoWidth = 25
             const logoHeight = (logo.height / logo.width) * logoWidth
-            doc.addImage(logo, 'PNG', margin, 8, logoWidth, logoHeight)
+            const logoY = 10 // Center vertically in 35px header
+            doc.addImage(logo, 'PNG', margin, logoY, logoWidth, logoHeight)
+
+            // Text next to logo
+            doc.setFontSize(18)
+            doc.setTextColor(255, 255, 255)
+            doc.setFont(undefined, 'bold')
+            doc.text('Wahyu Bandung Tour', margin + logoWidth + 8, 18)
+
+            doc.setFontSize(9)
+            doc.setFont(undefined, 'normal')
+            doc.text('Your Travel Partner', margin + logoWidth + 8, 24)
         } catch (error) {
             console.warn('Error adding logo to PDF:', error)
             // Fallback to text
@@ -62,6 +73,10 @@ export async function generateItineraryPDF(packageData) {
             doc.setTextColor(255, 255, 255)
             doc.setFont(undefined, 'bold')
             doc.text('WBTour', margin, 18)
+
+            doc.setFontSize(10)
+            doc.setFont(undefined, 'normal')
+            doc.text('Wahyu Bandung Tour - Your Travel Partner', margin, 26)
         }
     } else {
         // Fallback to text if logo didn't load
@@ -69,12 +84,11 @@ export async function generateItineraryPDF(packageData) {
         doc.setTextColor(255, 255, 255)
         doc.setFont(undefined, 'bold')
         doc.text('WBTour', margin, 18)
-    }
 
-    doc.setFontSize(10)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont(undefined, 'normal')
-    doc.text('Wahyu Bandung Tour - Your Travel Partner', margin, 26)
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'normal')
+        doc.text('Wahyu Bandung Tour - Your Travel Partner', margin, 26)
+    }
 
     yPos = 50
 
