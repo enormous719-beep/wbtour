@@ -1,6 +1,12 @@
 import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
 
+// Helper function to clean and parse itinerary text
+function parseItineraryText(text) {
+    // Remove leading * and trim
+    return text.replace(/^\*\s*/, '').trim()
+}
+
 export function generateItineraryPDF(packageData) {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
@@ -33,11 +39,7 @@ export function generateItineraryPDF(packageData) {
 
     yPos = 50
 
-    // ====== Package Title with border ======
-    doc.setDrawColor(16, 185, 129)
-    doc.setLineWidth(0.5)
-    doc.line(margin, yPos - 5, pageWidth - margin, yPos - 5)
-
+    // ====== Package Title ======
     doc.setFontSize(20)
     doc.setTextColor(16, 185, 129)
     doc.setFont(undefined, 'bold')
@@ -48,13 +50,14 @@ export function generateItineraryPDF(packageData) {
     })
     yPos += 3
 
-    // Duration & City with icons
+    // Duration & City
     doc.setFontSize(11)
     doc.setTextColor(80, 80, 80)
     doc.setFont(undefined, 'normal')
     doc.text(`Destinasi: ${packageData.city} | Durasi: ${packageData.days} Hari ${packageData.nights} Malam`, margin, yPos)
 
     doc.setDrawColor(16, 185, 129)
+    doc.setLineWidth(0.5)
     doc.line(margin, yPos + 3, pageWidth - margin, yPos + 3)
     yPos += 15
 
@@ -74,7 +77,8 @@ export function generateItineraryPDF(packageData) {
 
         packageData.highlights.forEach((highlight) => {
             checkPageOverflow(7)
-            const bullet = `  •  ${highlight}`
+            const cleanHighlight = parseItineraryText(highlight)
+            const bullet = `  •  ${cleanHighlight}`
             const lines = doc.splitTextToSize(bullet, pageWidth - margin * 2 - 5)
             lines.forEach(line => {
                 doc.text(line, margin, yPos)
@@ -104,7 +108,7 @@ export function generateItineraryPDF(packageData) {
             doc.setFontSize(12)
             doc.setFont(undefined, 'bold')
             doc.setTextColor(16, 185, 129)
-            doc.text(`Hari ${dayIndex + 1}`, margin + 2, yPos)
+            doc.text(`Day ${dayIndex + 1}`, margin + 2, yPos)
             yPos += 10
 
             // Activities
@@ -115,7 +119,8 @@ export function generateItineraryPDF(packageData) {
             if (Array.isArray(dayActivities)) {
                 dayActivities.forEach(activity => {
                     checkPageOverflow(7)
-                    const activityText = `  •  ${activity}`
+                    const cleanActivity = parseItineraryText(activity)
+                    const activityText = `  •  ${cleanActivity}`
                     const lines = doc.splitTextToSize(activityText, pageWidth - margin * 2 - 5)
                     lines.forEach(line => {
                         doc.text(line, margin + 3, yPos)
@@ -149,7 +154,7 @@ export function generateItineraryPDF(packageData) {
             doc.setFontSize(12)
             doc.setTextColor(16, 185, 129)
             doc.setFont(undefined, 'bold')
-            doc.text('✓ Termasuk', margin, leftY)
+            doc.text('✓ Harga Sudah Termasuk', margin, leftY)
             leftY += 7
 
             doc.setFontSize(9)
@@ -157,7 +162,8 @@ export function generateItineraryPDF(packageData) {
             doc.setFont(undefined, 'normal')
 
             packageData.includes.forEach(item => {
-                const lines = doc.splitTextToSize(`✓ ${item}`, halfWidth - 5)
+                const cleanItem = parseItineraryText(item)
+                const lines = doc.splitTextToSize(`✓ ${cleanItem}`, halfWidth - 5)
                 lines.forEach(line => {
                     if (leftY > pageHeight - 40) return
                     doc.text(line, margin + 2, leftY)
@@ -171,7 +177,7 @@ export function generateItineraryPDF(packageData) {
             doc.setFontSize(12)
             doc.setTextColor(239, 68, 68)
             doc.setFont(undefined, 'bold')
-            doc.text('✗ Tidak Termasuk', margin + halfWidth + 10, rightY)
+            doc.text('✗ Harga Belum Termasuk', margin + halfWidth + 10, rightY)
             rightY += 7
 
             doc.setFontSize(9)
@@ -179,7 +185,8 @@ export function generateItineraryPDF(packageData) {
             doc.setFont(undefined, 'normal')
 
             packageData.excludes.forEach(item => {
-                const lines = doc.splitTextToSize(`✗ ${item}`, halfWidth - 5)
+                const cleanItem = parseItineraryText(item)
+                const lines = doc.splitTextToSize(`✗ ${cleanItem}`, halfWidth - 5)
                 lines.forEach(line => {
                     if (rightY > pageHeight - 40) return
                     doc.text(line, margin + halfWidth + 12, rightY)
@@ -191,41 +198,13 @@ export function generateItineraryPDF(packageData) {
         yPos = Math.max(leftY, rightY) + 10
     }
 
-    // ====== Price Section ======
-    checkPageOverflow(25)
+    // ====== Note Section ======
+    checkPageOverflow(15)
 
     doc.setDrawColor(200, 200, 200)
     doc.line(margin, yPos, pageWidth - margin, yPos)
-    yPos += 10
-
-    doc.setFontSize(13)
-    doc.setTextColor(0, 0, 0)
-    doc.setFont(undefined, 'bold')
-    doc.text('💰 Harga Paket', margin, yPos)
     yPos += 8
 
-    if (packageData.priceOptions && packageData.priceOptions.length > 0) {
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'normal')
-        packageData.priceOptions.forEach(option => {
-            checkPageOverflow(6)
-            doc.setTextColor(60, 60, 60)
-            doc.text(`${option.name}:`, margin + 3, yPos)
-            doc.setTextColor(16, 185, 129)
-            doc.setFont(undefined, 'bold')
-            doc.text(`Rp ${option.price.toLocaleString('id-ID')}`, margin + 80, yPos)
-            doc.setFont(undefined, 'normal')
-            yPos += 6
-        })
-    } else {
-        doc.setFontSize(18)
-        doc.setTextColor(16, 185, 129)
-        doc.setFont(undefined, 'bold')
-        doc.text(`Rp ${packageData.price.toLocaleString('id-ID')}`, margin + 3, yPos)
-        yPos += 8
-    }
-
-    yPos += 8
     doc.setFontSize(8)
     doc.setTextColor(120, 120, 120)
     doc.setFont(undefined, 'italic')
