@@ -122,23 +122,42 @@ export async function generateItineraryPDF(packageData) {
         doc.setTextColor(0, 0, 0)
         doc.setFont(undefined, 'bold')
         doc.text('Highlights', margin, yPos)
-        yPos += 8
+        yPos += 5
 
-        doc.setFontSize(10)
-        doc.setTextColor(60, 60, 60)
-        doc.setFont(undefined, 'normal')
+        // Highlights table
+        const highlightRows = packageData.highlights.map((h, i) => [
+            (i + 1).toString(),
+            parseItineraryText(h)
+        ])
 
-        packageData.highlights.forEach((highlight) => {
-            checkPageOverflow(7)
-            const cleanHighlight = parseItineraryText(highlight)
-            const bullet = `  •  ${cleanHighlight}`
-            const lines = doc.splitTextToSize(bullet, pageWidth - margin * 2 - 5)
-            lines.forEach(line => {
-                doc.text(line, margin, yPos)
-                yPos += 5
-            })
+        doc.autoTable({
+            startY: yPos,
+            head: [['No', 'Highlight']],
+            body: highlightRows,
+            theme: 'grid',
+            headStyles: {
+                fillColor: [16, 185, 129],
+                textColor: [255, 255, 255],
+                fontSize: 10,
+                fontStyle: 'bold',
+                halign: 'left'
+            },
+            columnStyles: {
+                0: { cellWidth: 12, halign: 'center' },
+                1: { cellWidth: 'auto' }
+            },
+            bodyStyles: {
+                fontSize: 9,
+                textColor: [60, 60, 60]
+            },
+            margin: { left: margin, right: margin },
+            styles: {
+                lineColor: [200, 200, 200],
+                lineWidth: 0.1
+            }
         })
-        yPos += 8
+
+        yPos = doc.lastAutoTable.finalY + 10
     }
 
     // ====== Itinerary Section ======
@@ -149,39 +168,45 @@ export async function generateItineraryPDF(packageData) {
         doc.setTextColor(0, 0, 0)
         doc.setFont(undefined, 'bold')
         doc.text('Itinerary Lengkap', margin, yPos)
-        yPos += 10
+        yPos += 5
 
         packageData.itinerary.forEach((dayActivities, dayIndex) => {
-            checkPageOverflow(15)
+            // Prepare activities for this day
+            const dayRows = Array.isArray(dayActivities)
+                ? dayActivities.map((activity, i) => [
+                    (i + 1).toString(),
+                    parseItineraryText(activity)
+                ])
+                : []
 
-            // Day header with background
-            doc.setFillColor(240, 253, 244) // Light green
-            doc.roundedRect(margin - 2, yPos - 6, pageWidth - margin * 2 + 4, 10, 2, 2, 'F')
+            if (dayRows.length === 0) return
 
-            doc.setFontSize(12)
-            doc.setFont(undefined, 'bold')
-            doc.setTextColor(16, 185, 129)
-            doc.text(`Day ${dayIndex + 1}`, margin + 2, yPos)
-            yPos += 10
+            // Day table
+            doc.autoTable({
+                startY: yPos,
+                head: [[{ content: `Day ${dayIndex + 1}`, colSpan: 2, styles: { halign: 'left', fillColor: [240, 253, 244], textColor: [16, 185, 129], fontStyle: 'bold' } }]],
+                body: dayRows,
+                theme: 'grid',
+                headStyles: {
+                    fontSize: 11,
+                    fontStyle: 'bold'
+                },
+                columnStyles: {
+                    0: { cellWidth: 12, halign: 'center' },
+                    1: { cellWidth: 'auto' }
+                },
+                bodyStyles: {
+                    fontSize: 9,
+                    textColor: [60, 60, 60]
+                },
+                margin: { left: margin, right: margin },
+                styles: {
+                    lineColor: [200, 200, 200],
+                    lineWidth: 0.1
+                }
+            })
 
-            // Activities
-            doc.setFont(undefined, 'normal')
-            doc.setFontSize(10)
-            doc.setTextColor(60, 60, 60)
-
-            if (Array.isArray(dayActivities)) {
-                dayActivities.forEach(activity => {
-                    checkPageOverflow(7)
-                    const cleanActivity = parseItineraryText(activity)
-                    const activityText = `  •  ${cleanActivity}`
-                    const lines = doc.splitTextToSize(activityText, pageWidth - margin * 2 - 5)
-                    lines.forEach(line => {
-                        doc.text(line, margin + 3, yPos)
-                        yPos += 5
-                    })
-                })
-            }
-            yPos += 6
+            yPos = doc.lastAutoTable.finalY + 6
         })
         yPos += 5
     }
@@ -198,57 +223,54 @@ export async function generateItineraryPDF(packageData) {
         doc.line(margin, yPos, pageWidth - margin, yPos)
         yPos += 10
 
-        const halfWidth = (pageWidth - margin * 3) / 2
-        let leftY = yPos
-        let rightY = yPos
+        // Create table rows combining includes and excludes
+        const maxRows = Math.max(
+            packageData.includes?.length || 0,
+            packageData.excludes?.length || 0
+        )
 
-        // Include (left column)
-        if (packageData.includes && packageData.includes.length > 0) {
-            doc.setFontSize(12)
-            doc.setTextColor(16, 185, 129)
-            doc.setFont(undefined, 'bold')
-            doc.text('Harga Sudah Termasuk', margin, leftY)
-            leftY += 7
-
-            doc.setFontSize(9)
-            doc.setTextColor(60, 60, 60)
-            doc.setFont(undefined, 'normal')
-
-            packageData.includes.forEach(item => {
-                const cleanItem = parseItineraryText(item)
-                const lines = doc.splitTextToSize(`• ${cleanItem}`, halfWidth - 5)
-                lines.forEach(line => {
-                    if (leftY > pageHeight - 40) return
-                    doc.text(line, margin + 2, leftY)
-                    leftY += 4.5
-                })
-            })
+        const includeExcludeRows = []
+        for (let i = 0; i < maxRows; i++) {
+            includeExcludeRows.push([
+                packageData.includes?.[i] ? parseItineraryText(packageData.includes[i]) : '',
+                packageData.excludes?.[i] ? parseItineraryText(packageData.excludes[i]) : ''
+            ])
         }
 
-        // Exclude (right column)
-        if (packageData.excludes && packageData.excludes.length > 0) {
-            doc.setFontSize(12)
-            doc.setTextColor(239, 68, 68)
-            doc.setFont(undefined, 'bold')
-            doc.text('Harga Belum Termasuk', margin + halfWidth + 10, rightY)
-            rightY += 7
+        doc.autoTable({
+            startY: yPos,
+            head: [['Harga Sudah Termasuk', 'Harga Belum Termasuk']],
+            body: includeExcludeRows,
+            theme: 'grid',
+            headStyles: {
+                fontSize: 10,
+                fontStyle: 'bold',
+                halign: 'left'
+            },
+            columnStyles: {
+                0: {
+                    cellWidth: (pageWidth - margin * 2) / 2,
+                    fillColor: [240, 253, 244],
+                    textColor: [16, 185, 129]
+                },
+                1: {
+                    cellWidth: (pageWidth - margin * 2) / 2,
+                    fillColor: [254, 242, 242],
+                    textColor: [239, 68, 68]
+                }
+            },
+            bodyStyles: {
+                fontSize: 9,
+                textColor: [60, 60, 60]
+            },
+            margin: { left: margin, right: margin },
+            styles: {
+                lineColor: [200, 200, 200],
+                lineWidth: 0.1
+            }
+        })
 
-            doc.setFontSize(9)
-            doc.setTextColor(60, 60, 60)
-            doc.setFont(undefined, 'normal')
-
-            packageData.excludes.forEach(item => {
-                const cleanItem = parseItineraryText(item)
-                const lines = doc.splitTextToSize(`• ${cleanItem}`, halfWidth - 5)
-                lines.forEach(line => {
-                    if (rightY > pageHeight - 40) return
-                    doc.text(line, margin + halfWidth + 12, rightY)
-                    rightY += 4.5
-                })
-            })
-        }
-
-        yPos = Math.max(leftY, rightY) + 10
+        yPos = doc.lastAutoTable.finalY + 10
     }
 
     // ====== Note Section ======
