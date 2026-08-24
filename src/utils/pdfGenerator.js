@@ -34,26 +34,10 @@ export async function generateItineraryPDF(packageData) {
         console.warn('Logo failed to load:', error)
     }
 
-    // Helper function to add page border
-    const addPageBorder = () => {
-        doc.setDrawColor(16, 185, 129) // Emerald green
-        doc.setLineWidth(1.5)
-        doc.rect(5, 5, pageWidth - 10, pageHeight - 10, 'S') // Border with 5px margin from edge
-
-        // Inner border (decorative)
-        doc.setDrawColor(200, 200, 200) // Light gray
-        doc.setLineWidth(0.3)
-        doc.rect(8, 8, pageWidth - 16, pageHeight - 16, 'S')
-    }
-
-    // Add border to first page
-    addPageBorder()
-
     // Helper function to check page overflow
     const checkPageOverflow = (additionalHeight = 10) => {
         if (yPos + additionalHeight > pageHeight - 30) {
             doc.addPage()
-            addPageBorder() // Add border to new page
             yPos = 20
             return true
         }
@@ -62,12 +46,7 @@ export async function generateItineraryPDF(packageData) {
 
     // ====== HEADER - Brand with colored background ======
     doc.setFillColor(16, 185, 129)
-    doc.rect(10, 10, pageWidth - 20, 50, 'F') // Header box with margin from border
-
-    // Decorative line at bottom of header
-    doc.setDrawColor(255, 255, 255)
-    doc.setLineWidth(0.5)
-    doc.line(15, 58, pageWidth - 15, 58)
+    doc.rect(0, 0, pageWidth, 50, 'F')
 
     // Add logo if loaded
     if (logo) {
@@ -75,54 +54,54 @@ export async function generateItineraryPDF(packageData) {
             // Logo size: width 25, height auto-calculated to maintain aspect ratio
             const logoWidth = 25
             const logoHeight = (logo.height / logo.width) * logoWidth
-            const logoY = 18 // Center vertically in header
+            const logoY = 12 // Center vertically in header
             doc.addImage(logo, 'PNG', margin, logoY, logoWidth, logoHeight)
 
             // Text next to logo
             doc.setFontSize(16)
             doc.setTextColor(255, 255, 255)
             doc.setFont(undefined, 'bold')
-            doc.text('Wahyu Bandung Tour', margin + logoWidth + 8, 22)
+            doc.text('Wahyu Bandung Tour', margin + logoWidth + 8, 16)
 
             doc.setFontSize(8)
             doc.setFont(undefined, 'normal')
-            doc.text('Jl. Lengkong Besar No. 79C, Paledang, Kec. Lengkong', margin + logoWidth + 8, 28)
-            doc.text('Kota Bandung, Jawa Barat 40261', margin + logoWidth + 8, 33)
+            doc.text('Jl. Lengkong Besar No. 79C, Paledang, Kec. Lengkong', margin + logoWidth + 8, 22)
+            doc.text('Kota Bandung, Jawa Barat 40261', margin + logoWidth + 8, 27)
 
             // Contact info
             doc.setFontSize(7.5)
-            doc.text('WA: +62 822 2722 7039  |  Web: wahyubandungtour.com  |  IG: @wahyutransport', margin + logoWidth + 8, 39)
+            doc.text('WA: +62 822 2722 7039  |  Web: wahyubandungtour.com  |  IG: @wahyutransport', margin + logoWidth + 8, 33)
         } catch (error) {
             console.warn('Error adding logo to PDF:', error)
             // Fallback to text
             doc.setFontSize(20)
             doc.setTextColor(255, 255, 255)
             doc.setFont(undefined, 'bold')
-            doc.text('Wahyu Bandung Tour', margin, 22)
+            doc.text('Wahyu Bandung Tour', margin, 16)
 
             doc.setFontSize(8)
             doc.setFont(undefined, 'normal')
-            doc.text('Jl. Lengkong Besar No. 79C, Paledang, Kec. Lengkong', margin, 30)
-            doc.text('Kota Bandung, Jawa Barat 40261', margin, 35)
+            doc.text('Jl. Lengkong Besar No. 79C, Paledang, Kec. Lengkong', margin, 24)
+            doc.text('Kota Bandung, Jawa Barat 40261', margin, 29)
             doc.setFontSize(7.5)
-            doc.text('WA: +62 822 2722 7039  |  Web: wahyubandungtour.com  |  IG: @wahyutransport', margin, 41)
+            doc.text('WA: +62 822 2722 7039  |  Web: wahyubandungtour.com  |  IG: @wahyutransport', margin, 35)
         }
     } else {
         // Fallback to text if logo didn't load
         doc.setFontSize(20)
         doc.setTextColor(255, 255, 255)
         doc.setFont(undefined, 'bold')
-        doc.text('Wahyu Bandung Tour', margin, 22)
+        doc.text('Wahyu Bandung Tour', margin, 16)
 
         doc.setFontSize(8)
         doc.setFont(undefined, 'normal')
-        doc.text('Jl. Lengkong Besar No. 79C, Paledang, Kec. Lengkong', margin, 30)
-        doc.text('Kota Bandung, Jawa Barat 40261', margin, 35)
+        doc.text('Jl. Lengkong Besar No. 79C, Paledang, Kec. Lengkong', margin, 24)
+        doc.text('Kota Bandung, Jawa Barat 40261', margin, 29)
         doc.setFontSize(7.5)
-        doc.text('WA: +62 822 2722 7039  |  Web: wahyubandungtour.com  |  IG: @wahyutransport', margin, 41)
+        doc.text('WA: +62 822 2722 7039  |  Web: wahyubandungtour.com  |  IG: @wahyutransport', margin, 35)
     }
 
-    yPos = 68
+    yPos = 60
 
     // ====== Package Title ======
     doc.setFontSize(20)
