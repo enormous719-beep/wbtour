@@ -46,7 +46,7 @@ export async function generateItineraryPDF(packageData) {
 
     // ====== HEADER - Brand with colored background ======
     doc.setFillColor(16, 185, 129)
-    doc.rect(0, 0, pageWidth, 35, 'F')
+    doc.rect(0, 0, pageWidth, 50, 'F')
 
     // Add logo if loaded
     if (logo) {
@@ -54,43 +54,54 @@ export async function generateItineraryPDF(packageData) {
             // Logo size: width 25, height auto-calculated to maintain aspect ratio
             const logoWidth = 25
             const logoHeight = (logo.height / logo.width) * logoWidth
-            const logoY = 10 // Center vertically in 35px header
+            const logoY = 12 // Center vertically in header
             doc.addImage(logo, 'PNG', margin, logoY, logoWidth, logoHeight)
 
             // Text next to logo
-            doc.setFontSize(18)
+            doc.setFontSize(16)
             doc.setTextColor(255, 255, 255)
             doc.setFont(undefined, 'bold')
-            doc.text('Wahyu Bandung Tour', margin + logoWidth + 8, 18)
+            doc.text('Wahyu Bandung Tour', margin + logoWidth + 8, 16)
 
-            doc.setFontSize(9)
+            doc.setFontSize(8)
             doc.setFont(undefined, 'normal')
-            doc.text('Your Travel Partner', margin + logoWidth + 8, 24)
+            doc.text('Jl. Lengkong Besar No. 79C, Paledang, Kec. Lengkong', margin + logoWidth + 8, 22)
+            doc.text('Kota Bandung, Jawa Barat 40261', margin + logoWidth + 8, 27)
+
+            // Contact info
+            doc.setFontSize(7.5)
+            doc.text('WA: +62 822 2722 7039  |  Web: wahyubandungtour.com  |  IG: @wahyutransport', margin + logoWidth + 8, 33)
         } catch (error) {
             console.warn('Error adding logo to PDF:', error)
             // Fallback to text
-            doc.setFontSize(26)
+            doc.setFontSize(20)
             doc.setTextColor(255, 255, 255)
             doc.setFont(undefined, 'bold')
-            doc.text('WBTour', margin, 18)
+            doc.text('Wahyu Bandung Tour', margin, 16)
 
-            doc.setFontSize(10)
+            doc.setFontSize(8)
             doc.setFont(undefined, 'normal')
-            doc.text('Wahyu Bandung Tour - Your Travel Partner', margin, 26)
+            doc.text('Jl. Lengkong Besar No. 79C, Paledang, Kec. Lengkong', margin, 24)
+            doc.text('Kota Bandung, Jawa Barat 40261', margin, 29)
+            doc.setFontSize(7.5)
+            doc.text('WA: +62 822 2722 7039  |  Web: wahyubandungtour.com  |  IG: @wahyutransport', margin, 35)
         }
     } else {
         // Fallback to text if logo didn't load
-        doc.setFontSize(26)
+        doc.setFontSize(20)
         doc.setTextColor(255, 255, 255)
         doc.setFont(undefined, 'bold')
-        doc.text('WBTour', margin, 18)
+        doc.text('Wahyu Bandung Tour', margin, 16)
 
-        doc.setFontSize(10)
+        doc.setFontSize(8)
         doc.setFont(undefined, 'normal')
-        doc.text('Wahyu Bandung Tour - Your Travel Partner', margin, 26)
+        doc.text('Jl. Lengkong Besar No. 79C, Paledang, Kec. Lengkong', margin, 24)
+        doc.text('Kota Bandung, Jawa Barat 40261', margin, 29)
+        doc.setFontSize(7.5)
+        doc.text('WA: +62 822 2722 7039  |  Web: wahyubandungtour.com  |  IG: @wahyutransport', margin, 35)
     }
 
-    yPos = 50
+    yPos = 60
 
     // ====== Package Title ======
     doc.setFontSize(20)
