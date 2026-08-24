@@ -68,7 +68,7 @@ export function generateItineraryPDF(packageData) {
         doc.setFontSize(14)
         doc.setTextColor(0, 0, 0)
         doc.setFont(undefined, 'bold')
-        doc.text('✨ Highlights', margin, yPos)
+        doc.text('Highlights', margin, yPos)
         yPos += 8
 
         doc.setFontSize(10)
@@ -95,7 +95,7 @@ export function generateItineraryPDF(packageData) {
         doc.setFontSize(14)
         doc.setTextColor(0, 0, 0)
         doc.setFont(undefined, 'bold')
-        doc.text('📅 Itinerary Lengkap', margin, yPos)
+        doc.text('Itinerary Lengkap', margin, yPos)
         yPos += 10
 
         packageData.itinerary.forEach((dayActivities, dayIndex) => {
@@ -154,7 +154,7 @@ export function generateItineraryPDF(packageData) {
             doc.setFontSize(12)
             doc.setTextColor(16, 185, 129)
             doc.setFont(undefined, 'bold')
-            doc.text('✓ Harga Sudah Termasuk', margin, leftY)
+            doc.text('Harga Sudah Termasuk', margin, leftY)
             leftY += 7
 
             doc.setFontSize(9)
@@ -163,7 +163,7 @@ export function generateItineraryPDF(packageData) {
 
             packageData.includes.forEach(item => {
                 const cleanItem = parseItineraryText(item)
-                const lines = doc.splitTextToSize(`✓ ${cleanItem}`, halfWidth - 5)
+                const lines = doc.splitTextToSize(`• ${cleanItem}`, halfWidth - 5)
                 lines.forEach(line => {
                     if (leftY > pageHeight - 40) return
                     doc.text(line, margin + 2, leftY)
@@ -177,7 +177,7 @@ export function generateItineraryPDF(packageData) {
             doc.setFontSize(12)
             doc.setTextColor(239, 68, 68)
             doc.setFont(undefined, 'bold')
-            doc.text('✗ Harga Belum Termasuk', margin + halfWidth + 10, rightY)
+            doc.text('Harga Belum Termasuk', margin + halfWidth + 10, rightY)
             rightY += 7
 
             doc.setFontSize(9)
@@ -186,7 +186,7 @@ export function generateItineraryPDF(packageData) {
 
             packageData.excludes.forEach(item => {
                 const cleanItem = parseItineraryText(item)
-                const lines = doc.splitTextToSize(`✗ ${cleanItem}`, halfWidth - 5)
+                const lines = doc.splitTextToSize(`• ${cleanItem}`, halfWidth - 5)
                 lines.forEach(line => {
                     if (rightY > pageHeight - 40) return
                     doc.text(line, margin + halfWidth + 12, rightY)
@@ -233,10 +233,10 @@ export function generateItineraryPDF(packageData) {
     doc.setFontSize(10)
     doc.setFont(undefined, 'normal')
     doc.setTextColor(16, 185, 129)
-    doc.text('📱 WhatsApp: +62 822 2722 7039', margin, footerY + 6)
+    doc.text('WhatsApp: +62 822 2722 7039', margin, footerY + 6)
 
     doc.setTextColor(80, 80, 80)
-    doc.text('🌐 Website: wahyubandungtour.com', margin, footerY + 12)
+    doc.text('Website: wahyubandungtour.com', margin, footerY + 12)
 
     // Save PDF
     const filename = `${packageData.slug || packageData.title.toLowerCase().replace(/\s+/g, '-')}-itinerary.pdf`
