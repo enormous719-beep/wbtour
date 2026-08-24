@@ -11,8 +11,8 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\""
   },
   "dependencies": {
-    "jspdf": "^4.2.1",
-    "jspdf-autotable": "^5.0.8",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
     "pinia": "^2.1.7",
     "vue": "^3.4.0",
     "vue-router": "^4.3.0"
