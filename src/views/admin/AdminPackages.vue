@@ -349,9 +349,9 @@ async function deletePackage(pkg) {
   await fetchPackages()
 }
 
-function exportPDF(pkg) {
+async function exportPDF(pkg) {
   try {
-    generateItineraryPDF(pkg)
+    await generateItineraryPDF(pkg)
   } catch (error) {
     console.error('Error generating PDF:', error)
     alert('Gagal membuat PDF: ' + error.message)

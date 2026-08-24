@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
+import logoImage from '@/assets/wbtour.png'
 
 // Helper function to clean and parse itinerary text
 function parseItineraryText(text) {
@@ -7,12 +8,31 @@ function parseItineraryText(text) {
     return text.replace(/^\*\s*/, '').trim()
 }
 
-export function generateItineraryPDF(packageData) {
+// Helper function to load image as base64
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image()
+        img.crossOrigin = 'Anonymous'
+        img.onload = () => resolve(img)
+        img.onerror = reject
+        img.src = src
+    })
+}
+
+export async function generateItineraryPDF(packageData) {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
     const margin = 20
     let yPos = 20
+
+    // Load logo
+    let logo = null
+    try {
+        logo = await loadImage(logoImage)
+    } catch (error) {
+        console.warn('Logo failed to load:', error)
+    }
 
     // Helper function to check page overflow
     const checkPageOverflow = (additionalHeight = 10) => {
@@ -28,12 +48,31 @@ export function generateItineraryPDF(packageData) {
     doc.setFillColor(16, 185, 129)
     doc.rect(0, 0, pageWidth, 35, 'F')
 
-    doc.setFontSize(26)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont(undefined, 'bold')
-    doc.text('WBTour', margin, 18)
+    // Add logo if loaded
+    if (logo) {
+        try {
+            // Logo size: width 30, height auto-calculated to maintain aspect ratio
+            const logoWidth = 30
+            const logoHeight = (logo.height / logo.width) * logoWidth
+            doc.addImage(logo, 'PNG', margin, 8, logoWidth, logoHeight)
+        } catch (error) {
+            console.warn('Error adding logo to PDF:', error)
+            // Fallback to text
+            doc.setFontSize(26)
+            doc.setTextColor(255, 255, 255)
+            doc.setFont(undefined, 'bold')
+            doc.text('WBTour', margin, 18)
+        }
+    } else {
+        // Fallback to text if logo didn't load
+        doc.setFontSize(26)
+        doc.setTextColor(255, 255, 255)
+        doc.setFont(undefined, 'bold')
+        doc.text('WBTour', margin, 18)
+    }
 
     doc.setFontSize(10)
+    doc.setTextColor(255, 255, 255)
     doc.setFont(undefined, 'normal')
     doc.text('Wahyu Bandung Tour - Your Travel Partner', margin, 26)
 
