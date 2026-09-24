@@ -34,6 +34,10 @@
         class="transition-colors"
         :class="(!scrolled && isHomePage) ? 'hover:text-white' : 'hover:text-gray-900 dark:hover:text-white'"
       >Paket</RouterLink>
+      <RouterLink to="/calculator"
+        class="transition-colors"
+        :class="(!scrolled && isHomePage) ? 'hover:text-white' : 'hover:text-gray-900 dark:hover:text-white'"
+      >Kalkulator</RouterLink>
 
       <!-- Destinasi Dropdown -->
       <div class="relative" @mouseenter="destOpen = true" @mouseleave="destOpen = false">
@@ -91,6 +95,9 @@
 
     <!-- RIGHT ACTIONS -->
     <div class="hidden md:flex items-center gap-2">
+      <!-- Language Switcher -->
+      <LanguageSwitcher />
+      
       <!-- Theme Toggle -->
       <button
         @click="toggle()"
@@ -175,6 +182,10 @@
         class="block text-sm font-medium transition-colors"
         :class="(!scrolled && isHomePage) ? 'text-white/80 hover:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'"
       >Paket</RouterLink>
+      <RouterLink to="/calculator" @click="mobileOpen=false"
+        class="block text-sm font-medium transition-colors"
+        :class="(!scrolled && isHomePage) ? 'text-white/80 hover:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'"
+      >Kalkulator</RouterLink>
 
       <!-- Destinasi mobile -->
       <div>
@@ -296,6 +307,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useCartStore } from './stores/keranjang.js'
 import { useTheme } from './composables/useTheme.js'
+import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import logo from './assets/wbtour.png'
 
 const { isDark, toggle } = useTheme()

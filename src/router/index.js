@@ -5,6 +5,7 @@ import PackageDetailView from '../views/PackageDetailView.vue'
 import CartView from '../views/CartView.vue'
 import BlogView from '../views/BlogView.vue'
 import BlogDetailView from '../views/BlogDetailView.vue'
+import CalculatorView from '../views/CalculatorView.vue'
 import AdminLogin from '../views/admin/AdminLogin.vue'
 import AdminLayout from '../views/admin/AdminLayout.vue'
 import AdminDashboard from '../views/admin/AdminDashboard.vue'
@@ -18,6 +19,7 @@ const routes = [
   { path: '/packages', name: 'packages', component: PackagesView },
   { path: '/packages/:slug', name: 'package-detail', component: PackageDetailView },
   { path: '/cart', name: 'cart', component: CartView },
+  { path: '/calculator', name: 'calculator', component: CalculatorView },
 
   { path: '/blog', name: 'blog', component: BlogView },
   { path: '/blog/:slug', name: 'blog-detail', component: BlogDetailView },
